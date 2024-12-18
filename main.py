@@ -6,8 +6,8 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
 
-FIXER_API_KEY = 'HezvO50ITvf0WNf01uNeDYfQPASUjFOw'
-TOKEN = '7766992589:AAGZVx_Jsd086BmLRMo8PwEmv0aCkaXMqos'
+FIXER_API_KEY = ''
+TOKEN = ''
 FIXER_BASE_URL = 'https://api.apilayer.com/fixer/'
 HEADERS = {
     'apikey': FIXER_API_KEY
