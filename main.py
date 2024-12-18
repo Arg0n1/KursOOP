@@ -6,8 +6,8 @@ import requests
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 
-FIXER_API_KEY = '99sNQZHfgvkhuA8CswPhNRQpg8PmI1ID'
-TOKEN = '7766992589:AAGZVx_Jsd086BmLRMo8PwEmv0aCkaXMqos'
+FIXER_API_KEY = ''
+TOKEN = ''
 FIXER_BASE_URL = 'https://api.apilayer.com/fixer/'
 HEADERS = {
     'apikey': FIXER_API_KEY
@@ -87,36 +87,32 @@ async def rate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def update_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+
     data = query.data.split("_")
-    if len (data) == 3 and data[0] == "update":
+    if len(data) == 3 and data[0] == "update":
         base, symbol = data[1], data[2]
         rate = get_currency_rate(base.upper(), symbol.upper())
+
         if rate:
             from datetime import datetime
+
             new_text = (
                 f"Текущий курс конвертации {symbol.upper()} к {base.upper()}: {rate}\n"
                 f"Последнее обновление: {datetime.now().strftime('%H:%M:%S')}"
             )
+
             keyboard = [[InlineKeyboardButton("🔄Обновить курс", callback_data=f"update_{base}_{symbol}")]]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            current_text = query.message.text
-            if current_text == new_text:
-                await query.answer("The rate is already up to date!")
-                return
-            try:
-                await query.edit_message_text(
-                    text=new_text,
-                    reply_markup=reply_markup
-                )
-            except telegram.error.BadRequest as e:
-                if "Курс не обновлен" in str(e):
-                    await query.answer("Курс обновлен")
-                else:
-                    print(f"Error: {e}")
+
+            await query.edit_message_text(
+                text=new_text,
+                reply_markup=reply_markup
+            )
         else:
             await query.edit_message_text(
                 text="Ошибка получения данных."
             )
+
 
 async def history_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
