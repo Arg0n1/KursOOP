@@ -14,7 +14,7 @@ HEADERS = {
 }
 
 
-class CurrencyAPI:
+class ApiApp:
     def __init__(self, api_key):
         self.api_key = api_key
         self.base_url = FIXER_BASE_URL
@@ -69,7 +69,7 @@ class CurrencyAPI:
         return f"{percentage_change:.2f}%"
 
 
-class CurrencyPlotter:
+class Plotting:
     @staticmethod
     def plot_currency_rates(dates, rates, base, symbol):
         plt.style.use('dark_background')
@@ -90,9 +90,9 @@ class CurrencyPlotter:
         return plot_path
 
 
-class CurrencyBot:
+class BotCommand:
     def __init__(self, api_key, token):
-        self.currency_api = CurrencyAPI(api_key)
+        self.currency_api = ApiApp(api_key)
         self.application = Application.builder().token(token).build()
 
     async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -161,7 +161,7 @@ class CurrencyBot:
             rates, dates = self.currency_api.get_historical_data(base.upper(), symbol.upper(), days)
 
             if rates and dates:
-                plot_path = CurrencyPlotter.plot_currency_rates(dates, rates, base.upper(), symbol.upper())
+                plot_path = Plotting.plot_currency_rates(dates, rates, base.upper(), symbol.upper())
                 trend = self.currency_api.calculate_trend(rates)
                 percentage_change = self.currency_api.calculate_percentage_change(rates)
                 caption = (f"График конвертации {base.upper()} в {symbol.upper()} "
@@ -197,5 +197,5 @@ class CurrencyBot:
 
 if __name__ == "__main__":
     print("Bot started...")
-    bot = CurrencyBot(FIXER_API_KEY, TOKEN)
+    bot = BotCommand(FIXER_API_KEY, TOKEN)
     bot.run()
