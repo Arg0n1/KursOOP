@@ -102,22 +102,21 @@ class CurrencyBot:
         )
 
     async def help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        commands = (
+        await update.message.reply_text(
             "/start - Начните общение\n"
             "/help - Список команд\n"
             "/rate <FirstSymbol> <SecondSymbol> - Получить текущий курс\n"
             "/history <FirstSymbol> <SecondSymbol> <Days> - Получить график за последние несколько дней\n"
             "/currency - Получить список доступных валют"
         )
-        await update.message.reply_text(commands)
 
     async def rate_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             base, symbol = context.args
             rate = self.currency_api.get_currency_rate(base.upper(), symbol.upper())
             if rate:
-                keyboard = [[InlineKeyboardButton("🔄Обновить курс", callback_data=f"update_{base}_{symbol}")]]
-                reply_markup = InlineKeyboardMarkup(keyboard)
+                button = [[InlineKeyboardButton("🔄 Обновить курс", callback_data=f"update_{base}_{symbol}")]]
+                reply_markup = InlineKeyboardMarkup(button)
                 await update.message.reply_text(
                     text=f"Текущий курс конвертации {symbol.upper()} к {base.upper()}: {rate}",
                     reply_markup=reply_markup
@@ -139,16 +138,15 @@ class CurrencyBot:
             rate = self.currency_api.get_currency_rate(base.upper(), symbol.upper())
 
             if rate:
-                new_text = (
-                    f"Текущий курс конвертации {symbol.upper()} к {base.upper()}: {rate}\n"
-                    f"Последнее обновление: {datetime.now().strftime('%H:%M:%S')}"
-                )
 
-                keyboard = [[InlineKeyboardButton("🔄Обновить курс", callback_data=f"update_{base}_{symbol}")]]
+                keyboard = [[InlineKeyboardButton("🔄 Обновить курс", callback_data=f"update_{base}_{symbol}")]]
                 reply_markup = InlineKeyboardMarkup(keyboard)
 
                 await query.edit_message_text(
-                    text=new_text,
+                    text=(
+                    f"Текущий курс конвертации {symbol.upper()} к {base.upper()}: {rate}\n"
+                    f"Последнее обновление: {datetime.now().strftime('%H:%M:%S')}"
+                ),
                     reply_markup=reply_markup
                 )
             else:
