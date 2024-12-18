@@ -92,18 +92,31 @@ async def update_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         base, symbol = data[1], data[2]
         rate = get_currency_rate(base.upper(), symbol.upper())
         if rate:
+            from datetime import datetime
+            new_text = (
+                f"Текущий курс конвертации {symbol.upper()} к {base.upper()}: {rate}\n"
+                f"Последнее обновление: {datetime.now().strftime('%H:%M:%S')}"
+            )
+            keyboard = [[InlineKeyboardButton("🔄Обновить курс", callback_data=f"update_{base}_{symbol}")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            current_text = query.message.text
+            if current_text == new_text:
+                await query.answer("The rate is already up to date!")
+                return
             try:
-                keyboard = [[InlineKeyboardButton("🔄Обновить курс", callback_data=f"update_{base}_{symbol}")]]
-                reply_markup = InlineKeyboardMarkup(keyboard)
                 await query.edit_message_text(
-                    text = f"Текущий курс конвертации {symbol.upper()} к {base.upper()}: {rate}",
+                    text=new_text,
                     reply_markup=reply_markup
                 )
             except telegram.error.BadRequest as e:
-                print(f"Error: {e}")
-                await query.edit_message_text("Произошла ошибка во время обработки кнопки")
+                if "Курс не обновлен" in str(e):
+                    await query.answer("Курс обновлен")
+                else:
+                    print(f"Error: {e}")
         else:
-            await query.edit_message_text("Ошибка получения данных.")
+            await query.edit_message_text(
+                text="Ошибка получения данных."
+            )
 
 async def history_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -147,7 +160,6 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/currency - Получить список доступных валют"
     )
     await update.message.reply_text(commands)
-
 
 def main():
     application = Application.builder().token(TOKEN).build()
