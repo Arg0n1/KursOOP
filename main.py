@@ -1,5 +1,6 @@
-from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+import telegram
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 import os
 import requests
 import matplotlib.pyplot as plt
@@ -70,13 +71,39 @@ async def rate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         base, symbol = context.args
         rate = get_currency_rate(base.upper(), symbol.upper())
         if rate:
-            await update.message.reply_text(f"Текущий курс конвертации {symbol.upper()} к {base.upper()}: {rate}")
+            keyboard = [[InlineKeyboardButton("🔄Обновить курс", callback_data=f"update_{base}_{symbol}")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await update.message.reply_text(
+                text=f"Текущий курс конвертации {symbol.upper()} к {base.upper()}: {rate}",
+                reply_markup=reply_markup
+            )
         else:
             await update.message.reply_text("Ошибка получения данных.")
     except ValueError:
         await update.message.reply_text("Пожалуйста, используйте заданный формат: /rate <FirstSymbol> <SecondSymbol>")
     except Exception as e:
         await update.message.reply_text(f"Error: {e}")
+
+async def update_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    data = query.data.split("_")
+    if len (data) == 3 and data[0] == "update":
+        base, symbol = data[1], data[2]
+        rate = get_currency_rate(base.upper(), symbol.upper())
+        if rate:
+            try:
+                keyboard = [[InlineKeyboardButton("🔄Обновить курс", callback_data=f"update_{base}_{symbol}")]]
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                await query.edit_message_text(
+                    text = f"Текущий курс конвертации {symbol.upper()} к {base.upper()}: {rate}",
+                    reply_markup=reply_markup
+                )
+            except telegram.error.BadRequest as e:
+                print(f"Error: {e}")
+                await query.edit_message_text("Произошла ошибка во время обработки кнопки")
+        else:
+            await query.edit_message_text("Ошибка получения данных.")
 
 async def history_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -121,7 +148,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(commands)
 
-# Основная функция для запуска бота
+
 def main():
     application = Application.builder().token(TOKEN).build()
 
@@ -130,7 +157,7 @@ def main():
     application.add_handler(CommandHandler("rate", rate_command))
     application.add_handler(CommandHandler("history", history_command))
     application.add_handler(CommandHandler("currency", currency_command))
-
+    application.add_handler(CallbackQueryHandler(update_button))
     application.run_polling()
 
 if __name__ == "__main__":
